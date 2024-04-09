@@ -1,0 +1,57 @@
+{% extends 'index.html' %}
+{% block content %}
+
+<style>
+    .content{
+        width:70%;
+        padding: 20px;
+        margin: auto;
+        margin-top: 100px;
+        text-align: center;
+        border: 1px solid gray;
+    }
+    .nav {
+        height: 150px;
+        background-color: darkblue;
+    }
+    .content input{
+        width:80%;
+        padding: 6px;
+    }
+</style>
+<div class="container-fluid nav">
+
+</div>
+<div class="container bg-primary feature py-5 pb-lg-0 my-5">
+
+    {% for message in messages %}
+    <h6 style="color:red">{{message}}</h6>
+
+    {% endfor %}
+    <h6 style="color:red">{{form.errors}}</h6>
+
+</div>
+
+
+    <div class="container">
+        <div class="content">
+            <h3>Register</h3>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% for fields in form %}
+                {{fields.label}}: <br>
+                {{fields}} <br><br>
+                    
+                {% endfor %}
+                <button class="btn btn-primary" type="submit">Register</button>
+            </form>
+            <p>Have an account click <a href="{%url 'SignIn' %}">Here</a></p>
+            <!-- <p>At et justo elitr amet sea at. Magna et sit vero at ipsum sit et dolores rebum. Magna sea eos sit dolor, ipsum amet no tempor ipsum eirmod lorem eirmod diam tempor dolor eos diam et et diam dolor ea. Clita est rebum amet dolore sit. Dolor stet dolor duo clita, vero dolor ipsum amet dolore magna lorem erat stet sed vero dolor</p> -->
+
+        </div>
+    </div>
+
+    {% endblock %}
+
