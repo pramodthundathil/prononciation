@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.shortcuts import render
 import speech_recognition as sr
 import pyttsx3
@@ -11,9 +11,13 @@ from textblob import TextBlob
 
 from .models import AudioPrononciation, Comments
 from django.contrib.auth.decorators import login_required
+from .decorators import admin_only
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 
-
+@admin_only
 def Index(request):
     return render(request,"index.html")
 
@@ -69,6 +73,79 @@ def Detect(request):
         return render(request, 'detectpronon.html', {'message': message,"val":val})
 
     return render(request, 'detectpronon.html')
+
+
+def GetPronon(request):
+
+    def similarity(a, b):
+        return SequenceMatcher(None, a, b).ratio()
+    
+    user_word = ""
+    threshold = 0.8
+
+    if request.method == 'POST':
+        correct_word = request.POST["word"]
+        recognizer = sr.Recognizer()
+        pronon = correct_word 
+        engine = pyttsx3.init()
+        engine.say(pronon)
+        engine.runAndWait()
+
+        return render(request, 'getpronon.html', {"val":"Your Word Is {}".format(pronon)})
+
+    return render(request, 'getpronon.html')
+
+def CheckPrononciation(request):
+    def similarity(a, b):
+        return SequenceMatcher(None, a, b).ratio()
+    
+    user_word = ""
+    threshold = 0.8
+
+    if request.method == 'POST':
+        correct_word = request.POST["word"]
+        recognizer = sr.Recognizer()
+        pronon = "Correct prononciation is {}".format(correct_word)
+
+
+        with sr.Microphone() as source:
+            print("Please say the word.")
+            audio = recognizer.listen(source)
+             
+
+        try:
+            word = recognizer.recognize_google(audio)
+            user_word = word
+            similarity_score = similarity(correct_word, user_word)
+
+            if similarity_score >= threshold:
+                engine = pyttsx3.init()
+                engine.say("Correct prononciation congrats")
+                engine.runAndWait()
+                val = "Correct Pronunciation!"
+            else:
+                engine = pyttsx3.init()
+                engine.say(pronon)
+                engine.runAndWait()
+                val = "Wrong Pronunciation. Try again."
+            return render(request, 'checkpronunciation.html', {'word':"you said {}".format(user_word), "val":val, })
+        except sr.UnknownValueError:
+            message = "Speech Recognition could not understand the audio."
+            engine = pyttsx3.init()
+            engine.say(pronon)
+            engine.runAndWait()
+            val = "Wrong Pronunciation. Try again."
+        except sr.RequestError as e:
+            engine = pyttsx3.init()
+            engine.say(pronon)
+            engine.runAndWait()
+            val = "Wrong Pronunciation. Try again."
+            message = f"Could not request results from Google Speech Recognition service; {e}"
+
+        return render(request, 'checkpronunciation.html', {'message': message,"val":val})
+
+    return render(request, 'checkpronunciation.html')
+
 
 
 
@@ -213,6 +290,43 @@ def Search(request):
 
         }
         return render(request,"prononciation.html",context)
+
+
+def AdminIndex(request):
+    comment = Comments.objects.all()
+    audio1 = AudioPrononciation.objects.all().order_by("-sentimental_score")
+
+    context = {
+        "audio":audio1,
+        "comment":comment
+    }
+    return render(request,"adminindex.html",context)
+
+def DeletePronunciation(request,pk):
+    AudioPrononciation.objects.get(id = pk).delete()
+    messages.info(request,"Pronunciation deleted successfully....")
+    return redirect("AdminIndex")
+
+from django.views.decorators.csrf import csrf_exempt
+
+
+@login_required(login_url="SignIn")
+def like_audio(request, pk):
+
+    audio = AudioPrononciation.objects.get(id=pk)
+    if request.user in audio.likes.all():
+        audio.likes.remove(request.user)
+        audio.save()
+        return redirect("AllPrononciations")
+
+    else:
+        audio.likes.add(request.user)
+        audio.save()
+        return redirect("AllPrononciations")
+    return redirect("AllPrononciations")
+
+
+
 
 
 

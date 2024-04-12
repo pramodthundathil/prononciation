@@ -6,6 +6,8 @@
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
 <style>
     .nav {
         height: 100px;
@@ -126,6 +128,15 @@
                 <h1>Key Word: {{i.word}}</h1>
 
                 <h6>Owner: {{i.user.first_name}} </h6>
+                {% if request.user in i.likes.all %}
+                <a href="{%url 'like_audio' i.id %}" style="color:rgb(87, 87, 235);font-size: larger;" ><span >Like <i class="bi bi-hand-thumbs-up-fill"></i></span></a>
+                <span style="color:rgb(87, 87, 235);font-size: larger;"> {{i.total_likes}}</span>
+                {% else %}
+                <a href="{%url 'like_audio' i.id %}" style="color:rgb(12, 12, 13);font-size: larger;" ><span >Like <i class="bi bi-hand-thumbs-up"></i></span></a>
+                <span style="color:rgb(87, 87, 235);font-size: larger;"> {{i.total_likes}}</span>
+                
+                {% endif %}
+                <!-- <span style="color:rgb(12, 12, 13);font-size: larger;"> {{i.total_likes}}</span> -->
             </div>
 
             
@@ -160,4 +171,5 @@
 
 
 </div>
+
 {% endblock %}
